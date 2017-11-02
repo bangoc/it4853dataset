@@ -1,0 +1,1 @@
+Các em cần tạo một tệp json theo mẫu (xem template.json), cố gắng chỉ tách lấy những nội dung quan trọng.
