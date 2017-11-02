@@ -1,0 +1,1 @@
+Nhóm 06_INPG12 cần chuyển dữ liệu về đúng định dạng (xem template.json) để có thể tích hợp.
