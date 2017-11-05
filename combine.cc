@@ -1,4 +1,7 @@
 #include <iostream>
+#include <fstream>
+#include <chrono>
+#include <ctime>
 #include "json.hpp"
 
 /*
@@ -38,7 +41,7 @@ the target json may have the following structure v.1.0:
       {
         "id": "${unique query id}",
         "authors": ["${authors list}"],
-        "last modified": "${timestamp}",
+        "modified": "${timestamp}",
         "query": "query text as will be provided in the search engine",
         "description": "detail description for information need for this query and what should be relevance"
       }
@@ -47,20 +50,20 @@ the target json may have the following structure v.1.0:
       {
         "id": "${unique document id}",
         "authors": ["${authors list}"],
-        "last modified": "${timestamp}",
+        "modified": "${timestamp}",
         "url": "https://document.url",
         "title": "document title",
         "content": "Extracted texts from the document"
       }
     ],
-    "assessments": [
+    "relevances": [
       {
         "id": "${unique assessment id}",
         "authors": ["${authors list}"],
-        "last modified": "${timestamp}",
+        "modified": "${timestamp}",
         "docid": "${unique document id}",
         "queryid": "${unique query id}",
-        "relevance": "${boolean}"
+        "yes": "${boolean}"
       }
     ]
   }
@@ -68,39 +71,71 @@ the target json may have the following structure v.1.0:
 
 using json = nlohmann::json;
 
+int g_qid = 0;
+int g_did = 0;
+int g_rid = 0;
+
+bool Merge(const json& j, json& all) {
+  json authors = j["authors"];
+  std::string modified = j["modified"];
+  const json& c = j["collection"];
+  json& queries = all["queries"];
+  json& documents = all["documents"];
+  json& relevances = all["relevances"];
+
+  for (const auto& it: c) {
+    json q;
+    q["authors"] = authors;
+    q["id"] = g_qid++;
+    q["modified"] = modified;
+    q["query"] = it["query"];
+    q["description"] = it["description"];
+    queries.push_back(q);
+
+    const json& sites = it["sites"];
+    for (const auto& s: sites) {
+      json d;
+      d["id"] = g_did++;
+      d["authors"] = authors;
+      d["modified"] = modified;
+      d["url"] = s["url"];
+      d["title"] = s["title"];
+      d["content"] = s["content"];
+      documents.push_back(d);
+
+      json r;
+      r["id"] = g_rid++;
+      r["authors"] = authors;
+      r["modified"] = modified;
+      r["docid"] = d["id"];
+      r["queryid"] = q["id"];
+      r["yes"] = (s["relevance"] == "yes");
+      relevances.push_back(r);
+    }
+  }
+  return true;
+}
+
+std::string GetTimeStampt() {
+  std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+  std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+  std::ostringstream o;
+  o << std::put_time(std::localtime(&now_c), "%d/%m/%Y - %H:%M");
+  return o.str();
+}
+
 int main(int argc, char* argv[]) {
-  json all = 
-  R"({
-    "combined": "${timestamp}",
-    "queries": [
-      {
-        "id": "${unique query id}",
-        "authors": ["${authors list}"],
-        "last modified": "${timestamp}",
-        "query": "query text as will be provided in the search engine",
-        "description": "detail description for information need for this query and what should be relevance"
-      }
-    ],
-    "documents": [
-      {
-        "id": "${unique document id}",
-        "authors": ["${authors list}"],
-        "last modified": "${timestamp}",
-        "url": "https://document.url",
-        "title": "document title",
-        "content": "Extracted texts from the document"
-      }
-    ],
-    "assessments": [
-      {
-        "id": "${unique assessment id}",
-        "authors": ["${authors list}"],
-        "last modified": "${timestamp}",
-        "docid": "${unique document id}",
-        "queryid": "${unique query id}",
-        "relevance": "${boolean}"
-      }
-    ]
-  })"_json;
+  json all;
+  
+  for (int i = 1; i < argc; ++i) {
+    // We dont handle errors here, so please make sure that all input
+    //  file names are correct
+    std::ifstream input(argv[i]);
+    json j;
+    input >> j;
+    Merge(j, all);
+  }
+
+  all["combined"] = GetTimeStampt();
   std::cout << all.dump(2) << std::endl;
 }
