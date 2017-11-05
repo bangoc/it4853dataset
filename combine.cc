@@ -2,6 +2,7 @@
 #include <fstream>
 #include <chrono>
 #include <ctime>
+#include <exception>
 #include "json.hpp"
 
 /*
@@ -109,7 +110,8 @@ bool Merge(const json& j, json& all) {
       r["modified"] = modified;
       r["docid"] = d["id"];
       r["queryid"] = q["id"];
-      r["yes"] = (s["relevance"] == "yes");
+      r["yes"] = (s["relevance"] == "yes") || (s["relevance"] == "1") 
+                  || (s["relevance"] == 1);
       relevances.push_back(r);
     }
   }
