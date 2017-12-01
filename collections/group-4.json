@@ -1,6 +1,7 @@
-* Lỗi chính tả: relevance; nếu phù hợp thì để là yes, không phù hợp là no
+* Lỗi không tìm thấy trường dữ liệu relevance
 
-"Phùng Đức Nhật",
-"Đặng Minh Hiếu",
-"Lưu Hữu Phước",
-"Trần Ngọc Tuyền"
+nhóm tự kiểm tra lại bằng lệnh
+
+./combine group-4.json
+
+nếu chương trình kết thúc ko có lỗi là ok
