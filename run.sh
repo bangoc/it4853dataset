@@ -1,1 +1,0 @@
-./build/combine collections/Group_01_INPG12.json collections/Group_02_INPG12.json collections/Group_04_INPG12.JSON collections/Group_06_INPG12.json collections/group1.json collections/group3.json collections/group5.json  collections/nhom2.json collections/group-4.json > all.json
